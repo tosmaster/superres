@@ -1,0 +1,18 @@
+2019-06-17 19:05:07,385 DEBUG   MainThread:5146 [wandb_config.py:_load_defaults():81] no defaults not found in config-defaults.yaml
+2019-06-17 19:05:07,389 DEBUG   MainThread:5146 [cmd.py:execute():722] Popen(['git', 'cat-file', '--batch-check'], cwd=/mnt/data/superres, universal_newlines=False, shell=None)
+2019-06-17 19:05:07,393 DEBUG   MainThread:5146 [cmd.py:execute():722] Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/mnt/data/superres, universal_newlines=False, shell=None)
+2019-06-17 19:05:07,402 DEBUG   MainThread:5146 [run_manager.py:__init__():460] Initialized sync for superres/q5phy31m
+2019-06-17 19:05:07,403 INFO    MainThread:5146 [run_manager.py:wrap_existing_process():1016] wrapping existing process 5133
+2019-06-17 19:05:07,403 WARNING MainThread:5146 [io_wrap.py:register():104] SIGWINCH handler was not None: <Handlers.SIG_DFL: 0>
+2019-06-17 19:05:07,405 DEBUG   MainThread:5146 [connectionpool.py:_new_conn():824] Starting new HTTPS connection (1): pypi.org
+2019-06-17 19:05:08,392 INFO    Thread-2  :5146 [run_manager.py:_on_file_created():594] file/dir created: /mnt/data/superres/wandb/run-20190618_020506-q5phy31m/wandb-metadata.json
+2019-06-17 19:05:10,967 DEBUG   MainThread:5146 [connectionpool.py:_make_request():396] https://pypi.org:443 "GET /pypi/wandb/json HTTP/1.1" 200 31736
+2019-06-17 19:05:11,029 INFO    MainThread:5146 [run_manager.py:init_run():832] system metrics and metadata threads started
+2019-06-17 19:05:11,030 INFO    MainThread:5146 [run_manager.py:wrap_existing_process():1033] informing user process we are ready to proceed
+2019-06-17 19:05:11,031 INFO    MainThread:5146 [run_manager.py:_sync_etc():1116] entering loop for messages from user process
+2019-06-17 19:05:11,629 INFO    MainThread:5146 [run_manager.py:_sync_etc():1139] received message from user process: {"save_policy": {"glob": "model-best.h5", "policy": "live"}}
+2019-06-17 20:16:50,366 INFO    MainThread:5146 [run_manager.py:_sync_etc():1139] received message from user process: {"exitcode": 0}
+2019-06-17 20:16:50,366 INFO    MainThread:5146 [run_manager.py:_sync_etc():1225] closing log streams and sending exitcode to W&B
+2019-06-17 20:16:50,366 INFO    MainThread:5146 [run_manager.py:shutdown():946] shutting down system stats and metadata service
+_manager.py:_sync_etc():1225] closing log streams and sending exitcode to W&B
+2019-06-17 20:16:50,366 INFO    MainThread:5146 [q5phy31m:run_manager.py:shutdown():946] shutting down system stats and metadata service

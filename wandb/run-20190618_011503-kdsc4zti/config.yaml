@@ -1,0 +1,26 @@
+wandb_version: 1
+
+batch_size:
+  desc: null
+  value: 32
+input_height:
+  desc: null
+  value: 32
+input_width:
+  desc: null
+  value: 32
+num_epochs:
+  desc: null
+  value: 50
+output_height:
+  desc: null
+  value: 256
+output_width:
+  desc: null
+  value: 256
+steps_per_epoch:
+  desc: null
+  value: 156
+val_steps_per_epoch:
+  desc: null
+  value: 20

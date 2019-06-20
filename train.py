@@ -15,7 +15,7 @@ run = wandb.init(project='superres')
 config = run.config
 
 config.num_epochs = 50
-config.batch_size = 32
+config.batch_size = 128
 config.input_height = 32
 config.input_width = 32
 config.output_height = 256

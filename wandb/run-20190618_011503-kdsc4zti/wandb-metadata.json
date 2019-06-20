@@ -1,0 +1,22 @@
+{
+    "root": "/mnt/data/superres",
+    "git": {
+        "remote": "https://github.com/wandb/superres.git",
+        "commit": "823f032e55b893369b8a821f29eb7c2ce74a5bb5"
+    },
+    "email": "tosmaster@gmail.com",
+    "startedAt": "2019-06-18T01:15:03.365695",
+    "host": "tos-Z370XP-SLI",
+    "username": "tos",
+    "os": "Linux-4.15.0-51-generic-x86_64-with-debian-stretch-sid",
+    "python": "3.6.5",
+    "gpu": "GeForce GTX 1080 Ti",
+    "gpu_count": 1,
+    "cpu_count": 6,
+    "program": "train.py",
+    "args": [],
+    "state": "running",
+    "heartbeatAt": "2019-06-18T02:03:56.088838",
+    "jobType": null,
+    "mode": "dryrun"
+}
