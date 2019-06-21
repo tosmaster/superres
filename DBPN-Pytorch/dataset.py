@@ -91,9 +91,10 @@ class DatasetFromFolder(data.Dataset):
 
         input = load_img(self.image_filenames[index]+"-in.jpg")       
         bicubic = rescale_img(input, self.upscale_factor)
-        
+
         input, target, bicubic, _ = get_patch(input,target,bicubic,self.patch_size, self.upscale_factor)
-        
+        #input.show()
+        #target.show()        
         if self.data_augmentation:
             input, target, bicubic, _ = augment(input, target, bicubic)
         

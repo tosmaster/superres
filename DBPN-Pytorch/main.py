@@ -22,7 +22,7 @@ import time
 parser = argparse.ArgumentParser(description='PyTorch Super Res Example')
 parser.add_argument('--upscale_factor', type=int, default=8, help="super resolution upscale factor")
 parser.add_argument('--batchSize', type=int, default=2, help='training batch size')
-parser.add_argument('--nEpochs', type=int, default=2000, help='number of epochs to train for')
+parser.add_argument('--nEpochs', type=int, default=20, help='number of epochs to train for')
 parser.add_argument('--snapshots', type=int, default=50, help='Snapshots')
 parser.add_argument('--start_iter', type=int, default=1, help='Starting Epoch')
 parser.add_argument('--lr', type=float, default=1e-4, help='Learning Rate. Default=0.01')
@@ -33,6 +33,7 @@ parser.add_argument('--gpus', default=1, type=int, help='number of gpu')
 parser.add_argument('--data_dir', type=str, default='./data')
 parser.add_argument('--data_augmentation', type=bool, default=True)
 parser.add_argument('--hr_train_dataset', type=str, default='train')
+parser.add_argument('--hr_test_dataset', type=str, default='test')
 parser.add_argument('--model_type', type=str, default='DBPNLL')
 parser.add_argument('--residual', type=bool, default=True)
 parser.add_argument('--patch_size', type=int, default=40, help='Size of cropped HR image')
@@ -46,6 +47,17 @@ gpus_list = range(opt.gpus)
 hostname = str(socket.gethostname())
 cudnn.benchmark = True
 print(opt)
+
+def perceptual_distance(y_true, y_pred):
+    """Calculate perceptual distance, DO NOT ALTER"""
+    y_true *= 255
+    y_pred *= 255
+    rmean = (y_true[:, :, :, 0] + y_pred[:, :, :, 0]) / 2
+    r = y_true[:, :, :, 0] - y_pred[:, :, :, 0]
+    g = y_true[:, :, :, 1] - y_pred[:, :, :, 1]
+    b = y_true[:, :, :, 2] - y_pred[:, :, :, 2]
+
+    return torch.mean(torch.sqrt((((512+rmean)*r*r)/256) + 4*g*g + (((767-rmean)*b*b)/256)))
 
 def train(epoch):
     epoch_loss = 0
@@ -64,12 +76,12 @@ def train(epoch):
         if opt.residual:
             prediction = prediction + bicubic
 
-        loss = criterion(prediction, target)
+        loss = perceptual_distance(prediction, target)
         t1 = time.time()
         epoch_loss += loss.data
         loss.backward()
         optimizer.step()
-
+        #break
         print("===> Epoch[{}]({}/{}): Loss: {:.4f} || Timer: {:.4f} sec.".format(epoch, iteration, len(training_data_loader), loss.data, (t1 - t0)))
 
     print("===> Epoch {} Complete: Avg. Loss: {:.4f}".format(epoch, epoch_loss / len(training_data_loader)))
@@ -84,9 +96,9 @@ def test():
             target = target.cuda(gpus_list[0])
 
         prediction = model(input)
-        mse = criterion(prediction, target)
-        psnr = 10 * log10(1 / mse.data[0])
-        avg_psnr += psnr
+        mse = perceptual_distance(prediction, target)
+        #psnr = 10 * log10(1 / mse.data[0])
+        avg_psnr += mse
     print("===> Avg. PSNR: {:.4f} dB".format(avg_psnr / len(testing_data_loader)))
 
 def print_network(net):
@@ -112,6 +124,9 @@ if cuda:
 print('===> Loading datasets')
 train_set = get_training_set(opt.data_dir, opt.hr_train_dataset, opt.upscale_factor, opt.patch_size, opt.data_augmentation)
 training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True)
+
+test_set = get_training_set(opt.data_dir, opt.hr_test_dataset, opt.upscale_factor, opt.patch_size, opt.data_augmentation)
+testing_data_loader = DataLoader(dataset=test_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=False)
 
 print('===> Building model ', opt.model_type)
 if opt.model_type == 'DBPNLL':
@@ -143,7 +158,7 @@ optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999), eps=1e
 
 for epoch in range(opt.start_iter, opt.nEpochs + 1):
     train(epoch)
-
+    #break
     # learning rate is decayed by a factor of 10 every half of total epochs
     if (epoch+1) % (opt.nEpochs/2) == 0:
         for param_group in optimizer.param_groups:
@@ -152,3 +167,5 @@ for epoch in range(opt.start_iter, opt.nEpochs + 1):
             
     if (epoch+1) % (opt.snapshots) == 0:
         checkpoint(epoch)
+
+#test()
