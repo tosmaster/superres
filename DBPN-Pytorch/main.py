@@ -242,7 +242,7 @@ def test():
         if cuda:
             input = input.cuda(gpus_list[0])
             target = target.cuda(gpus_list[0])
-            bicubic = bicubic.cuda(gpus_list[0])
+            bicubicle  = bicubicle.cuda(gpus_list[0])
 
         t0 = time.time()
         if opt.chop_forward:
@@ -274,9 +274,9 @@ def test():
         sample["target"] = target
         #if i == 4: break
     print("===> val_loss: {:.4f} ".format(val_loss * opt.batchSize / len(testing_data_loader)))
-    input = sample["input"].permute(0,2,3,1).detach().clamp(0, 1).numpy()*255
-    pred = sample["prediction"].permute(0,2,3,1).detach().numpy()
-    target = sample["target"].permute(0,2,3,1).detach().numpy()
+    input = sample["input"].permute(0,2,3,1).cpu().detach().clamp(0, 1).numpy()*255
+    pred = sample["prediction"].permute(0,2,3,1).cpu().detach().numpy()
+    target = sample["target"].permute(0,2,3,1).cpu().detach().numpy()
     #print(input.shape,pred.shape,target.shape)
     #orig = Image.fromarray(input[0],'RGB')
     #orig.save()
@@ -383,44 +383,3 @@ print("test starting...")
 #loadmodel("RES_2.pth")
 test()
 
-print('===> Building model ', opt.model_type)
-if opt.model_type == 'DBPNLL':
-    model = DBPNLL(num_channels=3, base_filter=64,  feat = 256, num_stages=10, scale_factor=opt.upscale_factor) 
-elif opt.model_type == 'DBPN-RES-MR64-3':
-    model = DBPNITER(num_channels=3, base_filter=64,  feat = 256, num_stages=3, scale_factor=opt.upscale_factor)
-else:
-    model = DBPN(num_channels=3, base_filter=64,  feat = 256, num_stages=7, scale_factor=opt.upscale_factor) 
-    
-model = torch.nn.DataParallel(model, device_ids=gpus_list)
-criterion = nn.L1Loss()
-
-print('---------- Networks architecture -------------')
-print_network(model)
-print('----------------------------------------------')
-
-if opt.pretrained:
-    model_name = os.path.join(opt.save_folder + opt.pretrained_sr)
-    if os.path.exists(model_name):
-        #model= torch.load(model_name, map_location=lambda storage, loc: storage)
-        model.load_state_dict(torch.load(model_name, map_location=lambda storage, loc: storage))
-        print('Pre-trained SR model is loaded.')
-
-if cuda:
-    model = model.cuda(gpus_list[0])
-    criterion = criterion.cuda(gpus_list[0])
-
-optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999), eps=1e-8)
-
-for epoch in range(opt.start_iter, opt.nEpochs + 1):
-    train(epoch)
-    #break
-    # learning rate is decayed by a factor of 10 every half of total epochs
-    if (epoch+1) % (opt.nEpochs/2) == 0:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] /= 10.0
-        print('Learning rate decay: lr={}'.format(optimizer.param_groups[0]['lr']))
-            
-    if (epoch+1) % (opt.snapshots) == 0:
-        checkpoint(epoch)
-
-#test()
