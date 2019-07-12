@@ -13,7 +13,7 @@ def is_image_file(filename):
 
 
 def load_img(filepath):
-    img = Image.open(filepath).convert('RGB')
+    img = Image.open(filepath)
     #y, _, _ = img.split()
     return img
 
@@ -41,7 +41,7 @@ def get_patch(img_in, img_tar, img_bic, patch_size, scale, ix=0, iy=0):
     img_in = img_in.crop((iy,ix,iy + ip, ix + ip))
     img_tar = img_tar.crop((ty,tx,ty + tp, tx + tp))
     img_bic = img_bic.crop((ty,tx,ty + tp, tx + tp))
-                
+
     info_patch = {
         'ix': ix, 'iy': iy, 'ip': ip, 'tx': tx, 'ty': ty, 'tp': tp}
 
@@ -49,7 +49,7 @@ def get_patch(img_in, img_tar, img_bic, patch_size, scale, ix=0, iy=0):
 
 def augment(img_in, img_tar, img_bic, flip_h=True, rot=True):
     info_aug = {'flip_h': False, 'flip_v': False, 'trans': False}
-    
+
     if random.random() < 0.5 and flip_h:
         img_in = ImageOps.flip(img_in)
         img_tar = ImageOps.flip(img_tar)
@@ -67,13 +67,14 @@ def augment(img_in, img_tar, img_bic, flip_h=True, rot=True):
             img_tar = img_tar.rotate(180)
             img_bic = img_bic.rotate(180)
             info_aug['trans'] = True
-            
+
     return img_in, img_tar, img_bic, info_aug
-    
+
 class DatasetFromFolder(data.Dataset):
     def __init__(self, image_dir, patch_size, upscale_factor, data_augmentation, transform=None):
         super(DatasetFromFolder, self).__init__()
-        images = [x.split('-')[0]+'-'+ x.split('-')[1] for x in listdir(image_dir) if is_image_file(x)]
+        #images = [x.split('-')[0]+'-'+ x.split('-')[1] for x in listdir(image_dir) if is_image_file(x)]
+        images = [x[:x.rfind('-')] for x in listdir(image_dir) if is_image_file(x)]
         print(len(images))
         self.image_filenames =[]
         for x in images:
@@ -89,20 +90,21 @@ class DatasetFromFolder(data.Dataset):
     def __getitem__(self, index):
         target = load_img(self.image_filenames[index]+"-out.jpg")
 
-        input = load_img(self.image_filenames[index]+"-in.jpg")       
+        input = load_img(self.image_filenames[index]+"-in.jpg")
         bicubic = rescale_img(input, self.upscale_factor)
 
         input, target, bicubic, _ = get_patch(input,target,bicubic,self.patch_size, self.upscale_factor)
         #input.show()
-        #target.show()        
+        #target.show()
         if self.data_augmentation:
             input, target, bicubic, _ = augment(input, target, bicubic)
-        
+
         if self.transform:
             input = self.transform(input)
             bicubic = self.transform(bicubic)
             target = self.transform(target)
-                
+
+        #print("shape",input.shape,target.shape)
         return input, target, bicubic
 
     def __len__(self):
@@ -111,21 +113,32 @@ class DatasetFromFolder(data.Dataset):
 class DatasetFromFolderEval(data.Dataset):
     def __init__(self, lr_dir, upscale_factor, transform=None):
         super(DatasetFromFolderEval, self).__init__()
-        self.image_filenames = [join(lr_dir, x) for x in listdir(lr_dir) if is_image_file(x)]
+        images = [x[:x.rfind('-')] for x in listdir(lr_dir) if is_image_file(x)]
+        print(len(images))
+        self.image_filenames =[]
+        for x in images:
+            if x not in self.image_filenames:
+                self.image_filenames.append(x)
+        print(len(self.image_filenames))
+        self.image_filenames = [join(lr_dir, x) for x in self.image_filenames]
         self.upscale_factor = upscale_factor
         self.transform = transform
+        self.patch_size = 40
 
     def __getitem__(self, index):
-        input = load_img(self.image_filenames[index])
-        _, file = os.path.split(self.image_filenames[index])
+        target = load_img(self.image_filenames[index]+"-out.jpg")
 
+        input = load_img(self.image_filenames[index]+"-in.jpg")
         bicubic = rescale_img(input, self.upscale_factor)
-        
+
+        #input, target, bicubic, _ = get_patch(input,target,bicubic,self.patch_size, self.upscale_factor)
         if self.transform:
             input = self.transform(input)
             bicubic = self.transform(bicubic)
-            
-        return input, bicubic, file
-      
+            target = self.transform(target)
+
+        return input, target, bicubic
+
+
     def __len__(self):
         return len(self.image_filenames)
